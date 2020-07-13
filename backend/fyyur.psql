@@ -21,12 +21,75 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Data for Name: venues; Type: TABLE DATA; Schema: public
+-- Name: Venue; Type: TABLE; Schema: public;
+--
+DROP TABLE IF EXISTS "Venue";
+CREATE TABLE public."Venue" (
+    id integer  NOT NULL,
+    name text NOT NULL,
+    genres text[] NOT NULL,
+    city text NOT NULL,
+    state text NOT NULL,
+    address text NOT NULL,
+    phone text,
+    website text,
+    image_link text,
+    facebook_link text,
+    seeking_talent BOOL DEFAULT 'f',
+    seeking_description text,
+    PRIMARY KEY (id)
+);
+
+--
+-- Name: Artist; Type: TABLE; Schema: public;
+--
+DROP TABLE IF EXISTS "Artist";
+CREATE TABLE public."Artist" (
+    id integer  NOT NULL,
+    name text NOT NULL,
+    city text NOT NULL,
+    state text NOT NULL,
+    phone text,
+    genres text[] NOT NULL,
+    website text,
+    image_link text,
+    facebook_link text,
+    seeking_venue BOOL DEFAULT 'f',
+    seeking_description text,
+    PRIMARY KEY (id)
+);
+
+--
+-- Name: Show; Type: TABLE; Schema: public;
+--
+DROP TABLE IF EXISTS "Show";
+CREATE TABLE public."Show" (
+    id integer  NOT NULL,
+    start_time timestamp NOT NULL,
+    venue_id integer NOT NULL,
+    artist_id integer NOT NULL,
+    PRIMARY KEY (id), 
+    FOREIGN KEY (venue_id) REFERENCES public."Venue"(id) ON DELETE CASCADE,
+  	FOREIGN KEY (artist_id) REFERENCES public."Artist"(id) ON DELETE CASCADE
+);
+
+--
+-- Data for Name: Venue; Type: TABLE DATA; Schema: public;
 --
 
-COPY public.Venue (id, name, genres, city, state, address, phone, website, facebook_link, seeking_talent, seeking_description, image_link) FROM stdin;
-1	The Musical Hop	{Jazz, Reggae, Swing, Classical, Folk}	San Francisco	CA	1015 Folsom Street	123-123-1234	https://www.themusicalhop.com	True	We are on the lookout for a local artist to play every two weeks. Please call us.	https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60
-\.
+COPY public."Venue" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/backend/venue_data';
+
+--
+-- Data for Name: Artist; Type: TABLE DATA; Schema: public;
+--
+
+COPY public."Artist" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/backend/artist_data';
+
+--
+-- Data for Name: Show; Type: TABLE DATA; Schema: public;
+--
+
+COPY public."Show" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/backend/show_data';
 
 --
 -- PostgreSQL database dump complete
