@@ -5,7 +5,7 @@ import os
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_moment import Moment
 from flask_cors import CORS
@@ -14,6 +14,8 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from models import setup_db, Venue, Artist, Show
 from forms import *
+import re
+import validators
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -23,15 +25,7 @@ SECRET_KEY = os.urandom(32)
 app.config['SECRET_KEY'] = SECRET_KEY
 moment = Moment(app)
 db = setup_db(app)
-
-# Set up CORS, allow * for origins
-CORS(app, resources={'/': {'origins': '*'}})
-# Use the after_request decorator to set Access-Control-Allow
-@app.after_request
-def after_request(response):
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authentication,true')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS')
-  return response
+CORS(app)
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -47,6 +41,12 @@ def format_datetime(value, format='medium'):
 
 app.jinja_env.filters['datetime'] = format_datetime
 
+def is_valid_phone_number(phone):
+  return re.search(r"^[0-9]{3}-[0-9]{3}-[0-9]{4}$", phone)
+
+def is_valid_url(url):
+  return validators.url(url)
+
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
@@ -55,14 +55,12 @@ app.jinja_env.filters['datetime'] = format_datetime
 def index():
   return render_template('pages/home.html')
 
-
+#----------------------------------------------------------------------------#
 #  Venues
-#  ----------------------------------------------------------------
+#----------------------------------------------------------------------------#
 
 @app.route('/venues')
 def venues():
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
   data = []
   cities = Venue.query.distinct('city').all()
   for city in cities:
@@ -84,9 +82,6 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for Hop should return "The Musical Hop".
-  # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
   response={}
   data = []
   search_term = request.form.get('search_term', '') 
@@ -104,7 +99,7 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
-  # TODO: replace with real venue data from the venues table, using venue_id
+  # replace with real venue data from the venues table, using venue_id
   data = {}
   venue = Venue.query.filter_by(id=venue_id).one()
   data['id'] = venue.id
@@ -156,8 +151,8 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
+  # insert form data as a new Venue record in the db, instead
+  # modify data to be the data object returned from db insertion
   form = VenueForm(request.form)
   if form.validate_on_submit():
     error = False
@@ -183,7 +178,7 @@ def create_venue_submission():
       db.session.add(venue)
       db.session.commit()
 
-    # TODO: on unsuccessful db insert, flash an error instead.
+    # on unsuccessful db insert, flash an error instead.
     except Exception as e:
       error = True
       db.session.rollback()
@@ -196,14 +191,164 @@ def create_venue_submission():
     flash('Validation error. Venue ' + request.form['name'] + ' could not be listed.' + str(form.errors))
   return render_template('pages/home.html')
 
-@app.route('/venues/<venue_id>', methods=['DELETE'])
-def delete_venue(venue_id):
-  # TODO: Complete this endpoint for taking a venue_id, and using
-  # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+#----------------------------------------------------------------------------#
+#  Venue APIs
+#----------------------------------------------------------------------------#
+'''
+  Create an endpoint to handle GET requests for venues, 
+'''
+@app.route('/api/venues')
+def venues_api():
+  try:
+    venues = [venue.short() for venue in Venue.query.order_by(Venue.id).all()]
 
-  # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-  # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+    return jsonify({
+        'success': True,
+        'venues': venues,
+        'total_venues': len(venues)
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create an endpoint to get venues based on a search term
+'''
+@app.route('/api/venues/search', methods=['POST'])
+def search_venues_api():
+  body = request.get_json()
+  search = body.get('searchTerm', None)
+  try:
+    venues = [venue.short() for venue in Venue.query.order_by(Venue.id).filter(Venue.name.ilike('%{}%'.format(search)))]
+    return jsonify({
+        'success': True,
+        'venues': venues,
+        'total_venues': len(venues)
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create an endpoint to POST a new venue, validating input paramters
+'''
+@app.route('/api/venues/create', methods=['POST'])
+def create_venues_api():
+  body = request.get_json()
+  
+  name = body.get('name', None)
+  genres = body.get('genres', None)
+  city = body.get('city', None)
+  state = body.get('state', None)
+  address = body.get('address', None)
+  phone = body.get('phone', None)
+  website = body.get('website', None)
+  image_link = body.get('image_link', None)
+  facebook_link = body.get('facebook_link', None)
+  seeking_talent = body.get('seeking_talent', False)
+  seeking_description = body.get('seeking_description', None)
+
+  if not name or not genres or not city or not state or not address or \
+    (phone and not is_valid_phone_number(phone)) or (website and not is_valid_url(website)) or \
+    (image_link and not is_valid_url(image_link)) or (facebook_link and not is_valid_url(facebook_link)):
+    abort(400) 
+  try:
+    new_venue = Venue(name=name, genres=genres, city=city, state=state, address=address, 
+      phone=phone, website=website, image_link=image_link, facebook_link=facebook_link, 
+      seeking_talent=seeking_talent, seeking_description=seeking_description)
+    new_venue.insert()
+    venues = [venue.short() for venue in Venue.query.order_by(Venue.id).all()]
+    return jsonify({
+        'success': True,
+        'venues': venues,
+        'total_venues': len(venues)
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create a GET endpoint to get venues based on id. 
+'''
+@app.route('/api/venues/<int:venue_id>')
+def show_venue_api(venue_id):
+  try:
+    venue = Venue.query.filter(Venue.id==venue_id).one_or_none()
+    if not venue:
+      abort(404)
+
+    return jsonify({
+        'success': True,
+        'venue': venue.long()
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create a PATCH endpoint to edit venues based on id. 
+'''
+@app.route('/api/venues/<int:venue_id>/edit', methods=['PATCH'])
+def edit_venue_api(venue_id):
+  body = request.get_json()
+  name = body.get('name', None)
+  genres = body.get('genres', None)
+  city = body.get('city', None)
+  state = body.get('state', None)
+  address = body.get('address', None)
+  phone = body.get('phone', None)
+  website = body.get('website', None)
+  image_link = body.get('image_link', None)
+  facebook_link = body.get('facebook_link', None)
+  seeking_talent = body.get('seeking_talent', False)
+  seeking_description = body.get('seeking_description', None)
+  if not name or not genres or not city or not state or not address or \
+    (phone and not is_valid_phone_number(phone)) or (website and not is_valid_url(website)) or \
+    (image_link and not is_valid_url(image_link)) or (facebook_link and not is_valid_url(facebook_link)):
+    abort(400) 
+
+  try:
+    venue = Venue.query.filter(Venue.id==venue_id).one_or_none()
+    if not venue:
+      abort(404)
+    venue.name = name
+    venue.city = city
+    venue.state = state
+    venue.genres = genres
+    venue.address = address
+    venue.phone = phone
+    venue.website = website
+    venue.image_link = image_link
+    venue.facebook_link = facebook_link
+    venue.seeking_talent = seeking_talent
+    venue.seeking_description = seeking_description
+
+    venue.update()
+    return jsonify({
+        'success': True,
+        'venue': venue.long()
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create a PATCH endpoint to delete venues based on id. 
+'''
+@app.route('/api/venues/<venue_id>', methods=['DELETE'])
+def delete_venue_api(venue_id):
+  try:
+    venue = Venue.query.filter(Venue.id==venue_id).one_or_none()
+    if not venue:
+      abort(404)
+    venue.delete() 
+    return jsonify({
+        'success': True,
+        'delete': venue.short()
+      })
+
+  except:
+    abort(422)
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -279,60 +424,6 @@ def show_artist(artist_id):
 
   return render_template('pages/show_artist.html', artist=data)
 
-#  Update
-#  ----------------------------------------------------------------
-@app.route('/artists/<int:artist_id>/edit', methods=['GET'])
-def edit_artist(artist_id):
-  form = ArtistForm()
-  artist={
-    "id": 4,
-    "name": "Guns N Petals",
-    "genres": ["Rock n Roll"],
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "326-123-5000",
-    "website": "https://www.gunsnpetalsband.com",
-    "facebook_link": "https://www.facebook.com/GunsNPetals",
-    "seeking_venue": True,
-    "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-    "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-  }
-  # TODO: populate form with fields from artist with ID <artist_id>
-  return render_template('forms/edit_artist.html', form=form, artist=artist)
-
-@app.route('/artists/<int:artist_id>/edit', methods=['POST'])
-def edit_artist_submission(artist_id):
-  # TODO: take values from the form submitted, and update existing
-  # artist record with ID <artist_id> using the new attributes
-
-  return redirect(url_for('show_artist', artist_id=artist_id))
-
-@app.route('/venues/<int:venue_id>/edit', methods=['GET'])
-def edit_venue(venue_id):
-  form = VenueForm()
-  venue={
-    "id": 1,
-    "name": "The Musical Hop",
-    "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-    "address": "1015 Folsom Street",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "123-123-1234",
-    "website": "https://www.themusicalhop.com",
-    "facebook_link": "https://www.facebook.com/TheMusicalHop",
-    "seeking_talent": True,
-    "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-    "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
-  }
-  # TODO: populate form with values from venue with ID <venue_id>
-  return render_template('forms/edit_venue.html', form=form, venue=venue)
-
-@app.route('/venues/<int:venue_id>/edit', methods=['POST'])
-def edit_venue_submission(venue_id):
-  # TODO: take values from the form submitted, and update existing
-  # venue record with ID <venue_id> using the new attributes
-  return redirect(url_for('show_venue', venue_id=venue_id))
-
 #  Create Artist
 #  ----------------------------------------------------------------
 
@@ -382,6 +473,161 @@ def create_artist_submission():
     flash('Validation error. Artist ' + request.form['name'] + ' could not be listed.' + str(form.errors))
   return render_template('pages/home.html')
 
+#----------------------------------------------------------------------------#
+#  Artist APIs
+#----------------------------------------------------------------------------#
+'''
+  Create an endpoint to handle GET requests for artists, 
+'''
+@app.route('/api/artists')
+def artists_api():
+  try:
+    artists = [artist.short() for artist in Artist.query.order_by(Artist.id).all()]
+
+    return jsonify({
+        'success': True,
+        'artists': artists,
+        'total_artists': len(artists)
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create an endpoint to get artists based on a search term
+'''
+@app.route('/api/artists/search', methods=['POST'])
+def search_artists_api():
+  body = request.get_json()
+  search = body.get('searchTerm', None)
+  try:
+    artists = [artist.short() for artist in Artist.query.order_by(Artist.id).filter(Artist.name.ilike('%{}%'.format(search)))]
+    return jsonify({
+        'success': True,
+        'artists': artists,
+        'total_artists': len(artists)
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create an endpoint to POST a new artist, validating input paramters
+'''
+@app.route('/api/artists/create', methods=['POST'])
+def create_artists_api():
+  body = request.get_json()
+  
+  name = body.get('name', None)
+  genres = body.get('genres', None)
+  city = body.get('city', None)
+  state = body.get('state', None)
+  phone = body.get('phone', None)
+  website = body.get('website', None)
+  image_link = body.get('image_link', None)
+  facebook_link = body.get('facebook_link', None)
+  seeking_venue = body.get('seeking_venue', False)
+  seeking_description = body.get('seeking_description', None)
+
+  if not name or not genres or not city or not state or \
+    (phone and not is_valid_phone_number(phone)) or (website and not is_valid_url(website)) or \
+    (image_link and not is_valid_url(image_link)) or (facebook_link and not is_valid_url(facebook_link)):
+    abort(400) 
+  try:
+    new_artist = Artist(name=name, genres=genres, city=city, state=state, 
+      phone=phone, website=website, image_link=image_link, facebook_link=facebook_link, 
+      seeking_venue=seeking_venue, seeking_description=seeking_description)
+    new_artist.insert()
+    artists = [artist.short() for artist in Artist.query.order_by(Artist.id).all()]
+    return jsonify({
+        'success': True,
+        'artists': artists,
+        'total_artists': len(artists)
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create a GET endpoint to get artists based on id. 
+'''
+@app.route('/api/artists/<int:artist_id>')
+def show_artist_api(artist_id):
+  try:
+    artist = Artist.query.filter(Artist.id==artist_id).one_or_none()
+    if not artist:
+      abort(404)
+
+    return jsonify({
+        'success': True,
+        'venue': artist.long()
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create a PATCH endpoint to edit artists based on id. 
+'''
+@app.route('/api/artists/<int:artist_id>/edit', methods=['PATCH'])
+def edit_artist_api(artist_id):
+  body = request.get_json()
+  name = body.get('name', None)
+  genres = body.get('genres', None)
+  city = body.get('city', None)
+  state = body.get('state', None)
+  phone = body.get('phone', None)
+  website = body.get('website', None)
+  image_link = body.get('image_link', None)
+  facebook_link = body.get('facebook_link', None)
+  seeking_venue = body.get('seeking_venue', False)
+  seeking_description = body.get('seeking_description', None)
+  if not name or not genres or not city or not state or \
+    (phone and not is_valid_phone_number(phone)) or (website and not is_valid_url(website)) or \
+    (image_link and not is_valid_url(image_link)) or (facebook_link and not is_valid_url(facebook_link)):
+    abort(400) 
+
+  try:
+    artist = Artist.query.filter(Artist.id==artist_id).one_or_none()
+    if not artist:
+      abort(404)
+    artist.name = name
+    artist.city = city
+    artist.state = state
+    artist.genres = genres
+    artist.phone = phone
+    artist.website = website
+    artist.image_link = image_link
+    artist.facebook_link = facebook_link
+    artist.seeking_venue = seeking_venue
+    artist.seeking_description = seeking_description
+
+    artist.update()
+    return jsonify({
+        'success': True,
+        'artist': artist.long()
+      })
+
+  except:
+    abort(422)
+
+'''
+  Create a PATCH endpoint to delete artists based on id. 
+'''
+@app.route('/api/artists/<venue_id>', methods=['DELETE'])
+def delete_artist_api(artist_id):
+  try:
+    artist = Artist.query.filter(Artist.id==artist_id).one_or_none()
+    if not artist:
+      abort(404)
+    artist.delete() 
+    return jsonify({
+        'success': True,
+        'delete': artist.short()
+      })
+
+  except:
+    abort(422)
 
 #  Shows
 #  ----------------------------------------------------------------
@@ -432,13 +678,74 @@ def create_show_submission():
       flash('Show was successfully listed!')
   return render_template('pages/home.html')
 
-@app.errorhandler(404)
-def not_found_error(error):
-    return render_template('errors/404.html'), 404
+#----------------------------------------------------------------------------#
+#  Show APIs
+#----------------------------------------------------------------------------#
+@app.route('/api/shows')
+def shows_api():
+  try:
+    shows = [show.format() for show in Show.query.order_by(Show.id).all()]
+    return jsonify({
+        'success': True,
+        'drinks': shows
+      })
 
-@app.errorhandler(500)
-def server_error(error):
-    return render_template('errors/500.html'), 500
+  except:
+    abort(422)
+
+'''
+implement error handler for 400
+'''
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        'success': False,
+        'error': 400,
+        'message': 'Bad request'
+    }), 400
+
+'''
+implement error handler for 401
+'''
+@app.errorhandler(401)
+def not_authorized(error):
+    return jsonify({
+        "success": False,
+        "error": 401,
+        "message": "Not authorized"
+    }), 401
+
+'''
+implement error handler for 404 
+'''
+@app.errorhandler(404)
+def notfound(error):
+    return jsonify({
+        "success": False, 
+        "error": 404,
+        "message": "resource not found"
+        }), 404
+
+'''
+implement error handler for 422
+'''
+@app.errorhandler(422)
+def unprocessable(error):
+    return jsonify({
+        "success": False, 
+        "error": 422,
+        "message": "unprocessable"
+        }), 422
+
+'''
+implement error handler for AuthError
+    error handler should conform to general task above 
+'''
+# @app.errorhandler(AuthError)
+# def handle_auth_error(ex):
+#     response = jsonify(ex.error)
+#     response.status_code = ex.status_code
+#     return response
 
 
 if not app.debug:
