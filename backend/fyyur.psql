@@ -41,6 +41,20 @@ CREATE TABLE public."Venue" (
 );
 
 --
+-- Name: Venue_id_seq; Type: SEQUENCE; Schema: public;
+--
+
+CREATE SEQUENCE public.Venue_id_seq
+    AS integer
+    START WITH 5
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.Venue_id_seq OWNED BY public."Venue".id;
+
+--
 -- Name: Artist; Type: TABLE; Schema: public;
 --
 DROP TABLE IF EXISTS "Artist";
@@ -60,6 +74,20 @@ CREATE TABLE public."Artist" (
 );
 
 --
+-- Name: Artist_id_seq; Type: SEQUENCE; Schema: public;
+--
+
+CREATE SEQUENCE public.Artist_id_seq
+    AS integer
+    START WITH 4
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.Artist_id_seq OWNED BY public."Artist".id;
+
+--
 -- Name: Show; Type: TABLE; Schema: public;
 --
 DROP TABLE IF EXISTS "Show";
@@ -72,6 +100,39 @@ CREATE TABLE public."Show" (
     FOREIGN KEY (venue_id) REFERENCES public."Venue"(id) ON DELETE CASCADE,
   	FOREIGN KEY (artist_id) REFERENCES public."Artist"(id) ON DELETE CASCADE
 );
+
+--
+-- Name: Show_id_seq; Type: SEQUENCE; Schema: public;
+--
+
+CREATE SEQUENCE public.Show_id_seq
+    AS integer
+    START WITH 7
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.Show_id_seq OWNED BY public."Show".id;
+
+--
+-- Name: Venue id; Type: DEFAULT; Schema: public;
+--
+
+ALTER TABLE ONLY public."Venue" ALTER COLUMN id SET DEFAULT nextval('public.Venue_id_seq'::regclass);
+
+
+--
+-- Name: Artist id; Type: DEFAULT; Schema: public;
+--
+
+ALTER TABLE ONLY public."Artist" ALTER COLUMN id SET DEFAULT nextval('public.Artist_id_seq'::regclass);
+
+--
+-- Name: Show id; Type: DEFAULT; Schema: public;
+--
+
+ALTER TABLE ONLY public."Show" ALTER COLUMN id SET DEFAULT nextval('public.Show_id_seq'::regclass);
 
 --
 -- Data for Name: Venue; Type: TABLE DATA; Schema: public;
