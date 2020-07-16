@@ -2,6 +2,8 @@
 # Imports
 #----------------------------------------------------------------------------#
 import os
+import re
+import validators
 import json
 import dateutil.parser
 import babel
@@ -14,8 +16,7 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from models import setup_db, Venue, Artist, Show
 from forms import *
-import re
-import validators
+from auth import AuthError, requires_auth
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -54,6 +55,10 @@ def create_app(test_config=None):
 
   @app.route('/')
   def index():
+    return render_template('pages/login.html')
+
+  @app.route('/home')
+  def home():
     return render_template('pages/home.html')
 
   #----------------------------------------------------------------------------#
@@ -146,11 +151,13 @@ def create_app(test_config=None):
   #  ----------------------------------------------------------------
 
   @app.route('/venues/create', methods=['GET'])
+  # @requires_auth('post:venues')
   def create_venue_form():
     form = VenueForm()
     return render_template('forms/new_venue.html', form=form)
 
   @app.route('/venues/create', methods=['POST'])
+  # @requires_auth('post:venues')
   def create_venue_submission():
     # insert form data as a new Venue record in the db, instead
     # modify data to be the data object returned from db insertion
@@ -234,7 +241,8 @@ def create_app(test_config=None):
     Create an endpoint to POST a new venue, validating input paramters
   '''
   @app.route('/api/venues/create', methods=['POST'])
-  def create_venues_api():
+  @requires_auth('post:venues')
+  def create_venues_api(payload):
     body = request.get_json()
     
     name = body.get('name', None)
@@ -290,7 +298,8 @@ def create_app(test_config=None):
     Create a PATCH endpoint to edit venues based on id. 
   '''
   @app.route('/api/venues/<int:venue_id>/edit', methods=['PATCH'])
-  def edit_venue_api(venue_id):
+  @requires_auth('patch:venues')
+  def edit_venue_api(payload, venue_id):
     body = request.get_json()
     name = body.get('name', None)
     genres = body.get('genres', None)
@@ -337,7 +346,8 @@ def create_app(test_config=None):
     Create a PATCH endpoint to delete venues based on id. 
   '''
   @app.route('/api/venues/<venue_id>', methods=['DELETE'])
-  def delete_venue_api(venue_id):
+  @requires_auth('delete:venues')
+  def delete_venue_api(payload, venue_id):
     try:
       venue = Venue.query.filter(Venue.id==venue_id).one_or_none()
       if not venue:
@@ -429,11 +439,13 @@ def create_app(test_config=None):
   #  ----------------------------------------------------------------
 
   @app.route('/artists/create', methods=['GET'])
+  # @requires_auth('post:artists')
   def create_artist_form():
     form = ArtistForm()
     return render_template('forms/new_artist.html', form=form)
 
   @app.route('/artists/create', methods=['POST'])
+  # @requires_auth('post:artists')
   def create_artist_submission():
     # called upon submitting the new artist listing form
     # TODO: insert form data as a new Venue record in the db, instead
@@ -516,7 +528,8 @@ def create_app(test_config=None):
     Create an endpoint to POST a new artist, validating input paramters
   '''
   @app.route('/api/artists/create', methods=['POST'])
-  def create_artists_api():
+  @requires_auth('post:artists')
+  def create_artists_api(payload):
     body = request.get_json()
     
     name = body.get('name', None)
@@ -571,7 +584,8 @@ def create_app(test_config=None):
     Create a PATCH endpoint to edit artists based on id. 
   '''
   @app.route('/api/artists/<int:artist_id>/edit', methods=['PATCH'])
-  def edit_artist_api(artist_id):
+  @requires_auth('patch:artists')
+  def edit_artist_api(payload, artist_id):
     body = request.get_json()
     name = body.get('name', None)
     genres = body.get('genres', None)
@@ -616,7 +630,8 @@ def create_app(test_config=None):
     Create a PATCH endpoint to delete artists based on id. 
   '''
   @app.route('/api/artists/<artist_id>', methods=['DELETE'])
-  def delete_artist_api(artist_id):
+  @requires_auth('delete:artists')
+  def delete_artist_api(payload, artist_id):
     try:
       artist = Artist.query.filter(Artist.id==artist_id).one_or_none()
       if not artist:
@@ -650,12 +665,14 @@ def create_app(test_config=None):
     return render_template('pages/shows.html', shows=data)
 
   @app.route('/shows/create')
+  # @requires_auth('post:shows')
   def create_shows():
     # renders form. do not touch.
     form = ShowForm()
     return render_template('forms/new_show.html', form=form)
 
   @app.route('/shows/create', methods=['POST'])
+  # @requires_auth('post:shows')
   def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
     error = False
@@ -694,7 +711,8 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/api/shows/create', methods=['POST'])
-  def create_shows_api():
+  @requires_auth('post:shows')
+  def create_shows_api(payload):
     body = request.get_json()
 
     start_time = body.get('start_time', None)
@@ -771,11 +789,11 @@ def create_app(test_config=None):
   implement error handler for AuthError
       error handler should conform to general task above 
   '''
-  # @app.errorhandler(AuthError)
-  # def handle_auth_error(ex):
-  #     response = jsonify(ex.error)
-  #     response.status_code = ex.status_code
-  #     return response
+  @app.errorhandler(AuthError)
+  def handle_auth_error(ex):
+      response = jsonify(ex.error)
+      response.status_code = ex.status_code
+      return response
 
 
   if not app.debug:
