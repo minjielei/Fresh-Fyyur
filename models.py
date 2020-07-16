@@ -11,10 +11,10 @@ import json
 '''
 Local Testing
 '''
-# database_name = "fyyur"
-# database_path = "postgres://{}/{}".format('localhost:5432', database_name)
+database_name = "fyyur"
+database_path = "postgres://{}/{}".format('localhost:5432', database_name)
 
-database_path = "postgres://wxycixvjwwjzsl:7f2659d7263bd5d687fff5db7355ab07651877c93337e700db7d6a5052812c77@ec2-18-214-119-135.compute-1.amazonaws.com:5432/d7qolmeaeeobq6"
+# database_path = "postgres://wxycixvjwwjzsl:7f2659d7263bd5d687fff5db7355ab07651877c93337e700db7d6a5052812c77@ec2-18-214-119-135.compute-1.amazonaws.com:5432/d7qolmeaeeobq6"
 
 db = SQLAlchemy()
 

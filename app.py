@@ -22,7 +22,7 @@ from auth import AuthError, requires_auth
 #----------------------------------------------------------------------------#
 def create_app(test_config=None):
   # create and configure the app
-  app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
+  app = Flask(__name__)
   SECRET_KEY = os.urandom(32)
   app.config['SECRET_KEY'] = SECRET_KEY
   moment = Moment(app)

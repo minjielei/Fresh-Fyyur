@@ -138,19 +138,19 @@ ALTER TABLE ONLY public."Show" ALTER COLUMN id SET DEFAULT nextval('public.Show_
 -- Data for Name: Venue; Type: TABLE DATA; Schema: public;
 --
 
-COPY public."Venue" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/backend/venue_data';
+COPY public."Venue" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/venue_data';
 
 --
 -- Data for Name: Artist; Type: TABLE DATA; Schema: public;
 --
 
-COPY public."Artist" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/backend/artist_data';
+COPY public."Artist" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/artist_data';
 
 --
 -- Data for Name: Show; Type: TABLE DATA; Schema: public;
 --
 
-COPY public."Show" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/backend/show_data';
+COPY public."Show" FROM '/Users/amasics/Documents/Full_Stack_Web_Dev/Fresh-Fyyur/show_data';
 
 --
 -- PostgreSQL database dump complete
