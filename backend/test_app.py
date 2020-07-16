@@ -14,6 +14,10 @@ class FyyurTestCase(unittest.TestCase):
         self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
+        self.artist = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IktTdmNLM0RiRmRYXzBHdjROTjd6YyJ9.eyJpc3MiOiJodHRwczovL2FtYS1mc25kLnVzLmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw1ZWY3OWVjYmExNWI3YjAwMTM2MWE5OGYiLCJhdWQiOiJmeXl1ciIsImlhdCI6MTU5NDkyNDUzOCwiZXhwIjoxNTk0OTMxNzM4LCJhenAiOiI5SzY4cDFlNnNWNFZiUXQ2WFV1NHZLU3AxckhoY3ZyaCIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsicG9zdDphcnRpc3RzIiwicG9zdDpzaG93cyJdfQ.p3DurR5Fw50qjcNVNn9zv45KpL6AxVMsth-zy9mYmqIzixigB_q5HAi-yBV1ufjuXfbbkUpnCYW4JmouoTjLgahEJV4Si65jU_aNlQiS1OlJtniVPU_DiPq4wRexApPznz192adyFYvMr7ocdGJybIZuCcM3UiK5MZG7bRaT5d3fLx_3IF67kkirxIv7mn4ujQ7-RhFfUgURp7AA6263qhiNtLS05RbSIUb3sWbQeA4iIw0JTLJcVrc-Nt-rcrKy2yGjO0mtIgzE06wNKb41giGqQ5SRF0tdhQwgH520epd5bSsuflu4D7hNShX_jp-g1BSGoWQv9L7Ufgt1y0VFUQ"
+        self.venue_owner = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IktTdmNLM0RiRmRYXzBHdjROTjd6YyJ9.eyJpc3MiOiJodHRwczovL2FtYS1mc25kLnVzLmF1dGgwLmNvbS8iLCJzdWIiOiJnb29nbGUtb2F1dGgyfDExMTg5NzAwNDk3NjgzMjg2Mzg5MyIsImF1ZCI6WyJmeXl1ciIsImh0dHBzOi8vYW1hLWZzbmQudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTU5NDkyNDk1NCwiZXhwIjoxNTk0OTMyMTU0LCJhenAiOiI5SzY4cDFlNnNWNFZiUXQ2WFV1NHZLU3AxckhoY3ZyaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJwb3N0OnNob3dzIiwicG9zdDp2ZW51ZXMiXX0.Z0Z4A8EZmfFN5qmRrz2c3kiCfcul5iWWT_wG5dqMZPzBGIB8qVEL18NXvQZkshgVRJOIurOubEIbZVPdMkeAoZZymJLgcLiO7AtJb7AxUNrlP53S8nOddaZJVybND9b_C2z_5I1aMtaoaXQMX3pDY_m8uz_7mnH0BEaDKK-3NcoTIgfCaxWJUZ8zrMxNMb0XK6rv0D3xYpJnyN8wLzB2CuB2Wchy09mW7GM6qshXaF_mBnfKj2EpjopjCBdhpLb329RNP4SUVvhoMXH_TCc1Pe10I7Pzlf_m5FeajPzc1zSfnbvov-7uR-tdhVa_oJMM6KIz2sQA3DEi7jwT9FE6lA"
+        self.administrator = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IktTdmNLM0RiRmRYXzBHdjROTjd6YyJ9.eyJpc3MiOiJodHRwczovL2FtYS1mc25kLnVzLmF1dGgwLmNvbS8iLCJzdWIiOiJnb29nbGUtb2F1dGgyfDEwMzAzMDUzNjMxNTEzNDM5MzE2OSIsImF1ZCI6WyJmeXl1ciIsImh0dHBzOi8vYW1hLWZzbmQudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTU5NDkyNTA2OCwiZXhwIjoxNTk0OTMyMjY4LCJhenAiOiI5SzY4cDFlNnNWNFZiUXQ2WFV1NHZLU3AxckhoY3ZyaCIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJkZWxldGU6YXJ0aXN0cyIsImRlbGV0ZTp2ZW51ZXMiLCJwYXRjaDphcnRpc3RzIiwicGF0Y2g6dmVudWVzIl19.vc_trB3EqB57FYOWdLkutpImqoAYRq_-r4JfM0txm8d5BDSnoYzct8patwriXpFHxBfYBkTKUQGapW1lfS08oYZfH-nZ_7C_kBY6mjzGnAjVWoXAdST9pXyjf86AKhHZXeiHf06jBZ2iGck_CojK52Yx7BCKabnOE4l2FB_iaQni61YG2XA2VansWUYt2W2GDI6S3QhxUXndfRxptKDIG_TKSLiywOPCTaIdS_Fqs68ghTf06MV_p-baFt8CQrLqyfBpSkzQWkpbbC65l_epnWGL9ffLCB2IfI02sjx0oXFHgmUnSNrBr7kj0lOLjutsiFIk6CF_PxNQIKsUXFwhzg"
+
         self.new_venue = {
             "name": "The East Hop",
             "genres": ["Jazz", "Folk"],
@@ -180,7 +184,7 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(data['total_artists'], 0)
 
     def test_create_new_venue(self):
-        res = self.client().post('/api/venues/create', json=self.new_venue)
+        res = self.client().post('/api/venues/create', headers={"Authorization": "Bearer {}".format(self.venue_owner)}, json=self.new_venue)
         data = json.loads(res.data)
 
         venue = Venue.query.filter(Venue.name == self.new_venue['name']).one_or_none()
@@ -199,15 +203,22 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(venue.seeking_description, self.new_venue['seeking_description'])
 
     def test_create_venue_with_invalid_phone(self):
-        res = self.client().post('/api/venues/create', json=self.new_venue_invalid)
+        res = self.client().post('/api/venues/create', headers={"Authorization": "Bearer {}".format(self.venue_owner)}, json=self.new_venue_invalid)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 400)
         self.assertEqual(data['success'], False)
         self.assertTrue(data['message'], 'Bad request')
 
+    def test_401_create_new_venue_without_permission(self):
+        res = self.client().post('/api/venues/create', headers={"Authorization": "Bearer {}".format(self.artist)}, json=self.new_venue_invalid)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['code'], "unathorized")
+
     def test_create_new_artist(self):
-        res = self.client().post('/api/artists/create', json=self.new_artist)
+        res = self.client().post('/api/artists/create', headers={"Authorization": "Bearer {}".format(self.artist)}, json=self.new_artist)
         data = json.loads(res.data)
 
         artist = Artist.query.filter(Artist.name == self.new_artist['name']).one_or_none()
@@ -225,7 +236,7 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(artist.seeking_description, self.new_artist['seeking_description'])
 
     def test_create_artist_with_invalid_url(self):
-        res = self.client().post('/api/artists/create', json=self.new_artist_invalid)
+        res = self.client().post('/api/artists/create', headers={"Authorization": "Bearer {}".format(self.artist)}, json=self.new_artist_invalid)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 400)
@@ -233,7 +244,7 @@ class FyyurTestCase(unittest.TestCase):
         self.assertTrue(data['message'], 'Bad request')
 
     def test_create_show(self):
-        res = self.client().post('/api/shows/create', json=self.new_show)
+        res = self.client().post('/api/shows/create', headers={"Authorization": "Bearer {}".format(self.artist)}, json=self.new_show)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -243,15 +254,22 @@ class FyyurTestCase(unittest.TestCase):
         self.assertTrue(data['venue'])
 
     def test_404_create_show_with_invalid_id(self):
-        res = self.client().post('/api/shows/create', json=self.new_show_invalid)
+        res = self.client().post('/api/shows/create', headers={"Authorization": "Bearer {}".format(self.venue_owner)}, json=self.new_show_invalid)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'resource not found')
 
+    def test_401_create_new_show_without_permission(self):
+        res = self.client().post('/api/shows/create', headers={"Authorization": "Bearer {}".format(self.administrator)}, json=self.new_venue_invalid)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['code'], "unathorized")
+
     def test_edit_venue_by_id(self):
-        res = self.client().patch('/api/venues/2/edit', json=self.new_venue)
+        res = self.client().patch('/api/venues/2/edit', headers={"Authorization": "Bearer {}".format(self.administrator)}, json=self.new_venue)
         data = json.loads(res.data)
 
         venue = Venue.query.filter(Venue.id == 2).one_or_none()
@@ -270,15 +288,22 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(venue.seeking_description, self.new_venue['seeking_description'])
 
     def test_edit_venue_with_invalid_id(self):
-        res = self.client().patch('/api/venues/200/edit', json=self.new_venue)
+        res = self.client().patch('/api/venues/200/edit', headers={"Authorization": "Bearer {}".format(self.administrator)}, json=self.new_venue)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'unprocessable')
 
+    def test_401_edit_venue_without_permission(self):
+        res = self.client().patch('/api/venues/2/edit', headers={"Authorization": "Bearer {}".format(self.venue_owner)}, json=self.new_venue)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['code'], "unathorized")
+
     def test_edit_artist_by_id(self):
-        res = self.client().patch('/api/artists/1/edit', json=self.new_artist)
+        res = self.client().patch('/api/artists/1/edit', headers={"Authorization": "Bearer {}".format(self.administrator)}, json=self.new_artist)
         data = json.loads(res.data)
 
         artist = Artist.query.filter(Artist.id == 1).one_or_none()
@@ -296,7 +321,7 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(artist.seeking_description, self.new_artist['seeking_description'])
 
     def test_edit_artist_with_invalid_id(self):
-        res = self.client().patch('/api/artists/100/edit', json=self.new_artist)
+        res = self.client().patch('/api/artists/100/edit', headers={"Authorization": "Bearer {}".format(self.administrator)}, json=self.new_artist)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 422)
@@ -304,7 +329,7 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'unprocessable')
 
     def test_delete_venue_by_id(self):
-        res = self.client().delete('/api/venues/5')
+        res = self.client().delete('/api/venues/5', headers={"Authorization": "Bearer {}".format(self.administrator)})
         data = json.loads(res.data)
 
         venue = Venue.query.filter(Venue.id==5).one_or_none()
@@ -315,7 +340,7 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(venue, None)
 
     def test_delete_venue_invalid_id(self):
-        res = self.client().delete('/api/venues/200')
+        res = self.client().delete('/api/venues/200', headers={"Authorization": "Bearer {}".format(self.administrator)})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 422)
@@ -323,7 +348,7 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'unprocessable')
 
     def test_delete_artist_by_id(self):
-        res = self.client().delete('/api/artists/4')
+        res = self.client().delete('/api/artists/4', headers={"Authorization": "Bearer {}".format(self.administrator)})
         data = json.loads(res.data)
 
         artist = Artist.query.filter(Artist.id==4).one_or_none()
@@ -334,12 +359,19 @@ class FyyurTestCase(unittest.TestCase):
         self.assertEqual(artist, None)
 
     def test_delete_artist_invalid_id(self):
-        res = self.client().delete('/api/artists/200')
+        res = self.client().delete('/api/artists/200', headers={"Authorization": "Bearer {}".format(self.administrator)})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'unprocessable')
+
+    def test_401_delete_artist_without_permission(self):
+        res = self.client().delete('/api/artists/4', headers={"Authorization": "Bearer {}".format(self.artist)})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(data['code'], "unathorized")
 
 if __name__ == "__main__":
     unittest.main()
