@@ -53,6 +53,7 @@ python test_app.py
 see [Fresh Fyyur API Reference](./API_Reference.md)
 
 ## Deployment
+The application is deployed using Heroku and live at https://fresh-fyyur.herokuapp.com
 
 ## Author
 Minjie Lei
