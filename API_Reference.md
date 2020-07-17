@@ -3,17 +3,21 @@
 ## Getting Started
 * Base URL: The app is hosted via Heroku at the location `https://fresh-fyyur.herokuapp.com
 * Authentication: RBAC authorization policies are enforced for this API with the following roles and permissions:
+
 Artist:
 * post:artists
 * post:shows
+
 Venue Owner:
 * post:venues
 * post:shows
+
 Administrator
 * patch:artists
 * patch:venues
 * delete:artists
 * delete:venues
+
 Other endpoints for getting and searching venue, artist, and show information does not require RBAC authorization. 
 
 ## Error Handling
